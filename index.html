@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Carro IoT</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container text-center">
+        <h1>Control de Carro IoT</h1>
+        <div id="lastRecord" class="alert alert-info">Cargando último registro...</div>
+        <div class="cruceta">
+            <button class="btn btn-primary" onclick="sendCommand('avanzar')">Avanzar</button><br>
+            <button class="btn btn-secondary" onclick="sendCommand('retroceder')">Retroceder</button>
+            <div>
+                <button class="btn btn-success" onclick="sendCommand('giro_izquierda')">Giro Izquierdo</button>
+                <button class="btn btn-danger" onclick="sendCommand('detener')">Detener</button>
+                <button class="btn btn-warning" onclick="sendCommand('giro_derecha')">Giro Derecho</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para obtener el último registro
+        async function getLastRecord() {
+            try {
+                const response = await fetch('http://3.92.21.42:5000/iot/last');
+                if (!response.ok) {
+                    throw new Error('Error al obtener el último registro');
+                }
+                const data = await response.json();
+                // Muestra el último registro en el div correspondiente
+                document.getElementById('lastRecord').innerText = 
+                    `Último Registro - ID: ${data[0].id}, Status: ${data[0].status}, IP: ${data[0].ip_cliente}, Name: ${data[0].name}, ID Device: ${data[0].id_device}, Date: ${data[0].date}`;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('lastRecord').innerText = 'Error al cargar el último registro';
+            }
+        }
+
+        // Función para enviar comandos
+        async function sendCommand(command) {
+            try {
+                const response = await fetch('http://3.92.21.42:5000/iot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: command })  // Envía el comando en el cuerpo de la solicitud
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al enviar el comando');
+                }
+                await getLastRecord();  // Actualiza el último registro después de enviar el comando
+            } catch (error) {
+                console.error(error);
+                alert('Error al enviar el comando');
+            }
+        }
+
+        // Llama a getLastRecord al cargar la página
+        window.onload = getLastRecord;
+    </script>
+</body>
+</html>
